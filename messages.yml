@@ -1,0 +1,12 @@
+forceplay:
+  messages:
+    texts:
+      welcome: "Добро пожаловать в ForcePlay bot."
+      link.requested: "Запрос на привязку аккаунта отправлен. Подтвердите его в игре."
+      link.success: "Аккаунт успешно привязан."
+      hwid.approved: "Новый HWID подтвержден."
+      hwid.denied: "Запрос на смену HWID отклонен."
+      rate.limit: "Слишком много запросов. Попробуйте позже."
+      access.denied: "Недостаточно прав."
+      promo.created: "Промокод создан."
+      broadcast.done: "Рассылка завершена."

@@ -1,0 +1,9 @@
+forceplay:
+  lineage:
+    servers:
+      - name: x25_old
+        base-url: ${X25_OLD_BASE_URL:https://lineage.example.com}
+        token: ${X25_OLD_TOKEN:mock-token}
+      - name: x50_new
+        base-url: ${X50_NEW_BASE_URL:https://lineage2.example.com}
+        token: ${X50_NEW_TOKEN:mock-token}
