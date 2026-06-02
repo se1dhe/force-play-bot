@@ -21,6 +21,18 @@ public class TelegramBotProperties {
     @NotBlank
     private String channelUsername;
 
+    private String discordUrl = "https://forceplay.org/discordlink";
+
+    private String telegramChatUrl = "https://t.me/forceplay_chat";
+
+    private String telegramChannelUrl = "https://t.me/forceplay";
+
+    private String shopUrl = "https://forceplay.org/ru/panel/donations";
+
+    private String updaterUrl = "https://forceplay.org/ForcePlay.zip";
+
+    private String supportUrl = "https://forceplay.org/panel/support";
+
     private List<Long> adminIds = List.of();
 
     private long hwidTtlSeconds = 120;
@@ -31,9 +43,27 @@ public class TelegramBotProperties {
 
     private int referralItemCount = 1;
 
+    private long bonusItemId = 57L;
+
+    private int bonusItemCount = 1;
+
+    private String promoFilePath = "promo.txt";
+
+    private String promoDailyCron = "0 0 12 * * *";
+
+    private int promoLowStockThreshold = 100;
+
+    private String autofarmQuizFilePath = "autofarm-quiz.json";
+
     private int rateLimitPerMinute = 30;
 
     private String integrationMode = "mock";
 
     private boolean pollingEnabled = true;
+
+    private boolean demoDataEnabled = false;
+
+    private Long demoUserTelegramId;
+
+    private String demoUserLanguage = "ru";
 }

@@ -7,4 +7,10 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByTelegramId(Long telegramId);
+
+    java.util.List<User> findAllByAnnounceBossSpawnTrue();
+
+    java.util.List<User> findAllByAnnounceEventStartTrue();
+
+    java.util.List<User> findAllByAnnounceServerRestartTrue();
 }

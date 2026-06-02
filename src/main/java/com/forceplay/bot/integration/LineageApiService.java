@@ -1,11 +1,13 @@
 package com.forceplay.bot.integration;
 
-import com.forceplay.bot.dto.BossInfo;
-import com.forceplay.bot.dto.EventInfo;
+import com.forceplay.bot.dto.CharacterActionResult;
+import com.forceplay.bot.dto.AutofarmStatusResult;
+import com.forceplay.bot.dto.CharacterProfileResult;
 import com.forceplay.bot.dto.HwidConfirmCommand;
+import com.forceplay.bot.dto.HwidUnlinkResult;
 import com.forceplay.bot.dto.LinkConfirmResult;
 import com.forceplay.bot.dto.LinkRequestResult;
-import com.forceplay.bot.dto.PromoRedeemResult;
+import com.forceplay.bot.dto.BonusClaimResult;
 import com.forceplay.bot.dto.TradeKeyResult;
 
 import java.util.List;
@@ -17,13 +19,17 @@ public interface LineageApiService {
 
     void confirmHwid(HwidConfirmCommand command);
 
-    TradeKeyResult changeTradeKey(String serverName, String externalAccountId);
+    HwidUnlinkResult unlinkHwid(String serverName, String externalAccountId, Long externalCharacterId);
 
-    PromoRedeemResult redeemPromo(String serverName, String externalAccountId, String code);
+    TradeKeyResult changeTradeKey(String serverName, String externalAccountId, Long externalCharacterId, String password);
 
-    PromoRedeemResult claimBonus(String serverName, String externalAccountId, Long telegramId);
+    BonusClaimResult claimBonus(String serverName, String externalAccountId, Long externalCharacterId, Long telegramId, long itemId, int itemCount);
 
-    List<BossInfo> getBosses(String serverName);
+    CharacterProfileResult getCharacterProfile(String serverName, String externalAccountId, Long externalCharacterId);
 
-    List<EventInfo> getEvents(String serverName);
+    AutofarmStatusResult getAutofarmStatus(String serverName, String externalAccountId, Long externalCharacterId);
+
+    CharacterActionResult reviveAutofarm(String serverName, String externalAccountId, Long externalCharacterId);
+
+    CharacterActionResult teleportToTown(String serverName, String externalAccountId, Long externalCharacterId);
 }

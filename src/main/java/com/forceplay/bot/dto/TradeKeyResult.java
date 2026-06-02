@@ -1,7 +1,8 @@
 package com.forceplay.bot.dto;
 
 public record TradeKeyResult(
-        String tradeKey,
+        Long externalCharacterId,
+        boolean success,
         String message
 ) {
 }

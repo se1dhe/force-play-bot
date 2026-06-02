@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS clan_data (
+  clan_id INT UNSIGNED NOT NULL DEFAULT 0,
+  clan_name VARCHAR(45) CHARACTER SET utf8,
+  clan_level TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  hasCastle TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  hasHideout TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  ally_id INT UNSIGNED NOT NULL DEFAULT 0,
+  leader_id INT UNSIGNED NOT NULL DEFAULT 0,
+  crest VARBINARY(256) NULL DEFAULT NULL,
+  largecrest VARBINARY(8192) NULL DEFAULT NULL,
+  reputation_score INT NOT NULL default 0,
+  expelled_member INT UNSIGNED NOT NULL DEFAULT 0,
+  leaved_ally INT UNSIGNED NOT NULL DEFAULT 0,
+  dissolved_ally INT UNSIGNED NOT NULL DEFAULT 0,
+  dissolving_expiry_time DECIMAL( 20,0 ) NOT NULL DEFAULT 0,
+  auction_bid_at INT NOT NULL default '0',
+  PRIMARY KEY (clan_id),
+  KEY `leader_id` (`leader_id`),
+  KEY `ally_id` (`ally_id`)
+) ENGINE=MyISAM;

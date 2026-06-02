@@ -8,11 +8,13 @@ import com.forceplay.bot.model.GameCharacter;
 import com.forceplay.bot.model.User;
 import com.forceplay.bot.repository.AccountRepository;
 import com.forceplay.bot.repository.GameCharacterRepository;
+import com.forceplay.bot.util.ForcePlayException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,14 +27,31 @@ public class AccountLinkService {
 
     public LinkRequestResult requestLink(Long telegramId, String language, String serverName, String characterName) {
         userService.getOrCreateUser(telegramId, language);
-        return lineageApiService.requestAccountLink(serverName, characterName, telegramId);
+        LinkRequestResult result = lineageApiService.requestAccountLink(serverName, characterName, telegramId);
+        if (!result.ok()) {
+            throw new ForcePlayException(defaultMessage(result.message(), "Не удалось создать запрос на привязку."));
+        }
+        if (result.requestId() == null || result.requestId().isBlank()) {
+            throw new ForcePlayException("Сервер игры не вернул requestId для привязки.");
+        }
+        return result;
     }
 
     @Transactional
     public LinkConfirmResult confirmLink(Long telegramId, String language, String serverName, String requestId) {
         User user = userService.getOrCreateUser(telegramId, language);
         LinkConfirmResult result = lineageApiService.confirmAccountLink(serverName, requestId, telegramId);
+        persistLink(user, result);
+        return result;
+    }
 
+    private void persistLink(User user, LinkConfirmResult result) {
+        if (result.externalAccountId() == null || result.externalAccountId().isBlank()) {
+            throw new ForcePlayException("Сервер игры не вернул аккаунт для привязки.");
+        }
+        if (result.serverName() == null || result.serverName().isBlank()) {
+            throw new ForcePlayException("Сервер игры не вернул имя сервера для привязки.");
+        }
         Account account = accountRepository.findByExternalAccountIdAndServerName(result.externalAccountId(), result.serverName())
                 .orElse(Account.builder()
                         .externalAccountId(result.externalAccountId())
@@ -45,11 +64,16 @@ public class AccountLinkService {
         Account saved = accountRepository.save(account);
 
         gameCharacterRepository.deleteAllByAccountId(saved.getId());
-        result.characters().forEach(name -> gameCharacterRepository.save(GameCharacter.builder()
+        gameCharacterRepository.flush();
+        List<LinkConfirmResult.LinkedCharacter> linkedCharacters = result.linkedCharacters() == null ? List.of() : result.linkedCharacters();
+        linkedCharacters.forEach(character -> gameCharacterRepository.save(GameCharacter.builder()
                 .account(saved)
-                .name(name)
+                .externalCharacterId(character.externalCharacterId())
+                .name(character.name())
                 .build()));
+    }
 
-        return result;
+    private String defaultMessage(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value;
     }
 }

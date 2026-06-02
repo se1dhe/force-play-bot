@@ -10,5 +10,5 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "forceplay.messages")
 public class MessagesProperties {
 
-    private Map<String, String> texts = new HashMap<>();
+    private Map<String, Map<String, String>> translations = new HashMap<>();
 }

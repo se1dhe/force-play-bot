@@ -28,9 +28,13 @@ public class StartCommandHandler implements UpdateHandler {
         Message message = update.getMessage();
         String[] parts = message.getText().split("\\s+", 2);
         String payload = parts.length > 1 ? parts[1] : null;
-        userService.getOrCreateUser(message.getFrom().getId(), message.getFrom().getLanguageCode());
+        com.forceplay.bot.model.User user = userService.getOrCreateUser(message.getFrom().getId(), message.getFrom().getLanguageCode());
         referralService.registerReferral(message.getFrom().getId(), message.getFrom().getLanguageCode(), payload);
-        inlineMenuService.showMainMenu(message.getChatId(), message.getFrom().getId());
+        if (user.isLanguageSelected()) {
+            inlineMenuService.showMainMenu(message.getChatId(), message.getFrom().getId());
+            return;
+        }
+        inlineMenuService.showLanguageMenu(message.getChatId(), message.getFrom().getId());
     }
 
     private boolean isCommand(Message message, String command) {

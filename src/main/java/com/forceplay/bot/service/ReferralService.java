@@ -38,8 +38,12 @@ public class ReferralService {
                         .user(inviter)
                         .referredUser(referred)
                         .createdAt(OffsetDateTime.now())
-                        .build());
+                .build());
             }
         });
+    }
+
+    public long countInvitedUsers(Long telegramId) {
+        return referralRepository.countByUserTelegramId(telegramId);
     }
 }

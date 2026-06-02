@@ -33,11 +33,19 @@ public class HwidRequest {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "character_id", nullable = false)
+    private GameCharacter character;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
     @Column(name = "new_hwid", nullable = false)
     private String newHwid;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "slot_name", nullable = false)
+    private HwidSlot slot;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

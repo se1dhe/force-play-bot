@@ -3,10 +3,11 @@ package com.forceplay.bot.service;
 import com.forceplay.bot.config.TelegramBotProperties;
 import com.forceplay.bot.dto.HwidConfirmCommand;
 import com.forceplay.bot.integration.LineageApiService;
-import com.forceplay.bot.model.Account;
+import com.forceplay.bot.model.GameCharacter;
 import com.forceplay.bot.model.HwidRequest;
 import com.forceplay.bot.model.HwidRequestStatus;
-import com.forceplay.bot.repository.AccountRepository;
+import com.forceplay.bot.model.HwidSlot;
+import com.forceplay.bot.repository.GameCharacterRepository;
 import com.forceplay.bot.repository.HwidRequestRepository;
 import com.forceplay.bot.util.ForcePlayException;
 import lombok.RequiredArgsConstructor;
@@ -21,24 +22,32 @@ import java.util.List;
 @RequiredArgsConstructor
 public class HwidService {
 
-    private final AccountRepository accountRepository;
+    private final GameCharacterRepository gameCharacterRepository;
     private final HwidRequestRepository hwidRequestRepository;
     private final LineageApiService lineageApiService;
     private final TelegramBotProperties botProperties;
     private final RedisStateService redisStateService;
 
     @Transactional
-    public HwidRequest createRequest(String serverName, String externalAccountId, String newHwid) {
-        Account account = accountRepository.findByExternalAccountIdAndServerName(externalAccountId, serverName)
-                .orElseThrow(() -> new ForcePlayException("Account not found"));
+    public HwidRequest createRequest(String serverName, Long externalCharacterId, HwidSlot slot, String newHwid) {
+        GameCharacter character = gameCharacterRepository.findByExternalCharacterIdAndAccountServerName(externalCharacterId, serverName)
+                .orElseThrow(() -> new ForcePlayException("Character not found"));
 
         HwidRequest request = hwidRequestRepository.save(HwidRequest.builder()
-                .account(account)
+                .character(character)
+                .account(character.getAccount())
                 .newHwid(newHwid)
+                .slot(slot)
                 .status(HwidRequestStatus.PENDING)
                 .createdAt(OffsetDateTime.now())
                 .expiresAt(OffsetDateTime.now().plusSeconds(botProperties.getHwidTtlSeconds()))
                 .build());
+
+        // Инициализируем владельца внутри транзакции, чтобы webhook-уведомление
+        // после возврата из сервиса не падало на lazy proxy user/account.
+        request.getCharacter().getAccount().getUser().getTelegramId();
+        request.getCharacter().getAccount().getUser().getLanguage();
+        request.getCharacter().getAccount().getUser().isAnnounceNewHwidLogin();
 
         redisStateService.put(redisKey(request.getId()), newHwid, Duration.ofSeconds(botProperties.getHwidTtlSeconds()));
         redisStateService.enqueueNotification("HWID:" + request.getId());
@@ -54,14 +63,12 @@ public class HwidService {
         }
 
         request.setStatus(approved ? HwidRequestStatus.APPROVED : HwidRequestStatus.DENIED);
-        if (approved) {
-            request.getAccount().setHwid(request.getNewHwid());
-            accountRepository.save(request.getAccount());
-        }
         hwidRequestRepository.save(request);
         lineageApiService.confirmHwid(new HwidConfirmCommand(
-                request.getAccount().getServerName(),
-                request.getAccount().getExternalAccountId(),
+                request.getCharacter().getAccount().getServerName(),
+                request.getCharacter().getAccount().getExternalAccountId(),
+                request.getCharacter().getExternalCharacterId(),
+                request.getSlot(),
                 request.getNewHwid(),
                 approved
         ));
@@ -74,8 +81,10 @@ public class HwidService {
         expired.forEach(request -> {
             request.setStatus(HwidRequestStatus.DENIED);
             lineageApiService.confirmHwid(new HwidConfirmCommand(
-                    request.getAccount().getServerName(),
-                    request.getAccount().getExternalAccountId(),
+                    request.getCharacter().getAccount().getServerName(),
+                    request.getCharacter().getAccount().getExternalAccountId(),
+                    request.getCharacter().getExternalCharacterId(),
+                    request.getSlot(),
                     request.getNewHwid(),
                     false
             ));

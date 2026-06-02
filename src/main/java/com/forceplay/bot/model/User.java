@@ -33,6 +33,33 @@ public class User {
     @Column(nullable = false, length = 10)
     private String language;
 
+    @Column(name = "language_selected", nullable = false)
+    @Builder.Default
+    private boolean languageSelected = false;
+
+    @Column(name = "announce_boss_spawn", nullable = false)
+    @Builder.Default
+    private boolean announceBossSpawn = false;
+
+    @Column(name = "announce_event_start", nullable = false)
+    @Builder.Default
+    private boolean announceEventStart = false;
+
+    @Column(name = "announce_autofarm_death", nullable = false)
+    @Builder.Default
+    private boolean announceAutofarmDeath = false;
+
+    @Column(name = "announce_server_restart", nullable = false)
+    @Builder.Default
+    private boolean announceServerRestart = false;
+
+    @Column(name = "announce_new_hwid_login", nullable = false)
+    @Builder.Default
+    private boolean announceNewHwidLogin = true;
+
+    @Column(name = "bonus_claimed_at")
+    private OffsetDateTime bonusClaimedAt;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 }

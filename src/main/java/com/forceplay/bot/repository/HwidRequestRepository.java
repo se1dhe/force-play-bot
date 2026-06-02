@@ -9,6 +9,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface HwidRequestRepository extends JpaRepository<HwidRequest, Long> {
-    Optional<HwidRequest> findFirstByAccountIdAndStatusOrderByCreatedAtDesc(Long accountId, HwidRequestStatus status);
+    Optional<HwidRequest> findFirstByCharacterIdAndStatusOrderByCreatedAtDesc(Long characterId, HwidRequestStatus status);
     List<HwidRequest> findAllByStatusAndExpiresAtBefore(HwidRequestStatus status, OffsetDateTime timestamp);
 }

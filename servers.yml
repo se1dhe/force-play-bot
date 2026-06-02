@@ -1,9 +1,22 @@
 forceplay:
   lineage:
+    endpoints:
+      account-link-request: /api/{server}/account/link/request
+      account-link-confirm: /api/{server}/account/link/confirm
+      hwid-confirm: /api/{server}/hwid/confirm
+      hwid-unlink: /api/{server}/hwid/unlink
+      trade-key-change: /api/{server}/account/tradekey
+      bonus-claim: /api/{server}/bonus/claim
+      character-profile: /api/{server}/characters/profile
+      autofarm-status: /api/{server}/autofarm/status
+      autofarm-revive: /api/{server}/autofarm/revive
+      function-town: /api/{server}/functions/town
     servers:
       - name: x25_old
+        display-name: "🔥 x25 PvP"
         base-url: ${X25_OLD_BASE_URL:https://lineage.example.com}
         token: ${X25_OLD_TOKEN:mock-token}
       - name: x50_new
+        display-name: "⚔️ x1200 Interlude"
         base-url: ${X50_NEW_BASE_URL:https://lineage2.example.com}
         token: ${X50_NEW_TOKEN:mock-token}

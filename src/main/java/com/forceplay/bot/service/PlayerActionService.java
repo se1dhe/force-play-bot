@@ -1,6 +1,8 @@
 package com.forceplay.bot.service;
 
 import com.forceplay.bot.dto.TradeKeyResult;
+import com.forceplay.bot.dto.HwidUnlinkResult;
+import com.forceplay.bot.model.GameCharacter;
 import com.forceplay.bot.integration.LineageApiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,16 +15,33 @@ public class PlayerActionService {
     private final BonusService bonusService;
     private final TelegramBotPropertiesAccessor telegramBotPropertiesAccessor;
 
-    public TradeKeyResult changeTradeKey(String serverName, String externalAccountId) {
-        return lineageApiService.changeTradeKey(serverName, externalAccountId);
+    public HwidUnlinkResult unlinkHwid(GameCharacter character) {
+        return lineageApiService.unlinkHwid(
+                character.getAccount().getServerName(),
+                character.getAccount().getExternalAccountId(),
+                character.getExternalCharacterId()
+        );
     }
 
-    public String claimBonus(Long telegramId, String serverName, String externalAccountId) {
+    public TradeKeyResult changeTradeKey(GameCharacter character, String password) {
+        return lineageApiService.changeTradeKey(
+                character.getAccount().getServerName(),
+                character.getAccount().getExternalAccountId(),
+                character.getExternalCharacterId(),
+                password
+        );
+    }
+
+    public String claimBonus(Long telegramId, String language, GameCharacter character) {
         return bonusService.claimIfSubscribed(
                 telegramId,
-                serverName,
-                externalAccountId,
-                telegramBotPropertiesAccessor.channelUsername()
+                language,
+                character.getAccount().getServerName(),
+                character.getAccount().getExternalAccountId(),
+                character.getExternalCharacterId(),
+                telegramBotPropertiesAccessor.channelUsername(),
+                telegramBotPropertiesAccessor.bonusItemId(),
+                telegramBotPropertiesAccessor.bonusItemCount()
         );
     }
 }

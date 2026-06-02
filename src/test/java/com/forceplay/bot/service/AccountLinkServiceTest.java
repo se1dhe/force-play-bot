@@ -42,7 +42,14 @@ class AccountLinkServiceTest {
         User user = User.builder().id(1L).telegramId(99L).language("ru").build();
         when(userService.getOrCreateUser(99L, "ru")).thenReturn(user);
         when(lineageApiService.confirmAccountLink("x25_old", "req-1", 99L))
-                .thenReturn(new LinkConfirmResult("acc-1", "x25_old", "hwid-1", List.of("Main", "Spoil")));
+                .thenReturn(new LinkConfirmResult(
+                        "acc-1",
+                        "x25_old",
+                        "hwid-1",
+                        List.of(
+                                new LinkConfirmResult.LinkedCharacter(101L, "Main"),
+                                new LinkConfirmResult.LinkedCharacter(102L, "Spoil")
+                        )));
         when(accountRepository.findByExternalAccountIdAndServerName("acc-1", "x25_old")).thenReturn(Optional.empty());
         when(accountRepository.save(any(Account.class))).thenAnswer(invocation -> {
             Account account = invocation.getArgument(0);
@@ -54,10 +61,17 @@ class AccountLinkServiceTest {
 
         assertThat(result.externalAccountId()).isEqualTo("acc-1");
         verify(gameCharacterRepository).deleteAllByAccountId(10L);
+        verify(gameCharacterRepository).flush();
         verify(gameCharacterRepository, times(2)).save(any());
         ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
         verify(accountRepository).save(accountCaptor.capture());
         assertThat(accountCaptor.getValue().getHwid()).isEqualTo("hwid-1");
         assertThat(accountCaptor.getValue().getUser()).isEqualTo(user);
+        ArgumentCaptor<com.forceplay.bot.model.GameCharacter> characterCaptor =
+                ArgumentCaptor.forClass(com.forceplay.bot.model.GameCharacter.class);
+        verify(gameCharacterRepository, times(2)).save(characterCaptor.capture());
+        assertThat(characterCaptor.getAllValues())
+                .extracting(com.forceplay.bot.model.GameCharacter::getExternalCharacterId)
+                .containsExactly(101L, 102L);
     }
 }

@@ -6,6 +6,17 @@ public record LinkConfirmResult(
         String externalAccountId,
         String serverName,
         String hwid,
-        List<String> characters
+        List<LinkedCharacter> linkedCharacters
 ) {
+    public List<String> characters() {
+        return (linkedCharacters == null ? List.<LinkedCharacter>of() : linkedCharacters).stream()
+                .map(LinkedCharacter::name)
+                .toList();
+    }
+
+    public record LinkedCharacter(
+            Long externalCharacterId,
+            String name
+    ) {
+    }
 }

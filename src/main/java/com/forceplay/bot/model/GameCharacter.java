@@ -28,6 +28,9 @@ public class GameCharacter {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "external_character_id")
+    private Long externalCharacterId;
+
     @Column(nullable = false)
     private String name;
 

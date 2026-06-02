@@ -39,11 +39,26 @@ forceplay:
     username: ${BOT_USERNAME:forceplay_bot}
     token: ${BOT_TOKEN:replace-me}
     channel-username: ${BOT_CHANNEL_USERNAME:@forceplay}
+    discord-url: ${BOT_DISCORD_URL:https://forceplay.org/discordlink}
+    telegram-chat-url: ${BOT_TELEGRAM_CHAT_URL:https://t.me/forceplay_chat}
+    telegram-channel-url: ${BOT_TELEGRAM_CHANNEL_URL:https://t.me/forceplay}
+    shop-url: ${BOT_SHOP_URL:https://forceplay.org/ru/panel/donations}
+    updater-url: ${BOT_UPDATER_URL:https://forceplay.org/ForcePlay.zip}
+    support-url: ${BOT_SUPPORT_URL:https://forceplay.org/panel/support}
     admin-ids: ${ADMIN_IDS:}
     referral-enabled: ${REFERRAL_ENABLED:true}
     referral-item-id: ${REFERRAL_ITEM_ID:57}
     referral-item-count: ${REFERRAL_ITEM_COUNT:1}
+    bonus-item-id: ${BONUS_ITEM_ID:57}
+    bonus-item-count: ${BONUS_ITEM_COUNT:1}
+    promo-file-path: ${PROMO_FILE_PATH:promo.txt}
+    promo-daily-cron: ${PROMO_DAILY_CRON:0 0 12 * * *}
+    promo-low-stock-threshold: ${PROMO_LOW_STOCK_THRESHOLD:100}
+    autofarm-quiz-file-path: ${AUTOFARM_QUIZ_FILE_PATH:autofarm-quiz.json}
     integration-mode: ${FORCEPLAY_INTEGRATION_MODE:mock}
     hwid-ttl-seconds: ${HWID_TTL_SECONDS:120}
     rate-limit-per-minute: ${RATE_LIMIT_PER_MINUTE:30}
     polling-enabled: ${BOT_POLLING_ENABLED:true}
+    demo-data-enabled: ${DEMO_DATA_ENABLED:false}
+    demo-user-telegram-id: ${DEMO_USER_TELEGRAM_ID:}
+    demo-user-language: ${DEMO_USER_LANGUAGE:ru}

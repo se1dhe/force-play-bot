@@ -21,4 +21,8 @@ public class AdminService {
                 .map(user -> user.getTelegramId())
                 .toList();
     }
+
+    public java.util.List<Long> getAdminIds() {
+        return botProperties.getAdminIds();
+    }
 }

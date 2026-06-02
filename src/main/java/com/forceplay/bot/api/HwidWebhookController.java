@@ -22,7 +22,7 @@ public class HwidWebhookController {
 
     @PostMapping
     public ResponseEntity<Void> createRequest(@Valid @RequestBody HwidWebhookRequest request) {
-        HwidRequest saved = hwidService.createRequest(request.serverName(), request.externalAccountId(), request.newHwid());
+        HwidRequest saved = hwidService.createRequest(request.serverName(), request.externalCharacterId(), request.slot(), request.newHwid());
         inlineMenuService.sendHwidNotification(saved);
         return ResponseEntity.accepted().build();
     }

@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS `char_keys` (
+ `obj_Id` INT NOT NULL DEFAULT 0,
+ `password` VARCHAR(32) DEFAULT '',
+  PRIMARY KEY (obj_Id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

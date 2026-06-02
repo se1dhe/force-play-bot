@@ -7,7 +7,13 @@ public interface TelegramGateway {
 
     void sendText(Long chatId, String text, InlineKeyboardMarkup replyMarkup);
 
+    void sendHtml(Long chatId, String text, InlineKeyboardMarkup replyMarkup);
+
     void editText(Long chatId, Integer messageId, String text, InlineKeyboardMarkup replyMarkup);
+
+    void editHtml(Long chatId, Integer messageId, String text, InlineKeyboardMarkup replyMarkup);
+
+    void answerCallback(String callbackQueryId);
 
     void answerCallback(String callbackQueryId, String text);
 

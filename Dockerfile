@@ -11,6 +11,8 @@ WORKDIR /app
 COPY --from=build /app/target/force-play-bot-0.0.1-SNAPSHOT.jar app.jar
 COPY messages.yml ./messages.yml
 COPY servers.yml ./servers.yml
+COPY promo.txt ./promo.txt
+COPY autofarm-quiz.json ./autofarm-quiz.json
 
 EXPOSE 8080
 

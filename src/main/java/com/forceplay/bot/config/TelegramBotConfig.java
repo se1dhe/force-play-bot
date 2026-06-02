@@ -2,6 +2,8 @@ package com.forceplay.bot.config;
 
 import com.forceplay.bot.handler.UpdateHandler;
 import com.forceplay.bot.service.RedisStateService;
+import com.forceplay.bot.service.UpdateUserContextService;
+import com.forceplay.bot.util.ForcePlayException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -25,6 +27,7 @@ public class TelegramBotConfig {
     private final TelegramBotProperties properties;
     private final List<UpdateHandler> handlers;
     private final RedisStateService redisStateService;
+    private final UpdateUserContextService updateUserContextService;
 
     @Bean(destroyMethod = "close")
     @ConditionalOnProperty(name = "forceplay.bot.polling-enabled", havingValue = "true", matchIfMissing = true)
@@ -39,25 +42,39 @@ public class TelegramBotConfig {
         return new LongPollingSingleThreadUpdateConsumer() {
             @Override
             public void consume(Update update) {
-                Long telegramId = extractTelegramId(update);
-                if (telegramId != null) {
-                    boolean allowed = redisStateService.tryAcquireRateLimit(
-                            "forceplay:ratelimit:" + telegramId,
-                            Duration.ofMinutes(1),
-                            properties.getRateLimitPerMinute()
-                    );
-                    if (!allowed) {
-                        sendSafe(resolveChatId(update), "Too many requests.");
-                        return;
-                    }
-                }
-
-                handlers.stream()
-                        .filter(handler -> handler.supports(update))
-                        .findFirst()
-                        .ifPresent(handler -> handler.handle(update));
+                processUpdate(update);
             }
         };
+    }
+
+    void processUpdate(Update update) {
+        try {
+            updateUserContextService.registerFromUpdate(update);
+
+            Long telegramId = extractTelegramId(update);
+            if (telegramId != null) {
+                boolean allowed = redisStateService.tryAcquireRateLimit(
+                        "forceplay:ratelimit:" + telegramId,
+                        Duration.ofMinutes(1),
+                        properties.getRateLimitPerMinute()
+                );
+                if (!allowed) {
+                    sendSafe(resolveChatId(update), "Too many requests.");
+                    return;
+                }
+            }
+
+            handlers.stream()
+                    .filter(handler -> handler.supports(update))
+                    .findFirst()
+                    .ifPresent(handler -> handler.handle(update));
+        } catch (ForcePlayException exception) {
+            log.warn("Telegram update rejected: {}", exception.getMessage());
+            sendSafe(resolveChatId(update), exception.getMessage());
+        } catch (Exception exception) {
+            log.error("Failed to process Telegram update: {}", update, exception);
+            sendSafe(resolveChatId(update), "Внутренняя ошибка. Попробуйте ещё раз.");
+        }
     }
 
     private Long resolveChatId(Update update) {
@@ -80,7 +97,7 @@ public class TelegramBotConfig {
         return null;
     }
 
-    private void sendSafe(Long chatId, String text) {
+    void sendSafe(Long chatId, String text) {
         if (chatId == null) {
             return;
         }

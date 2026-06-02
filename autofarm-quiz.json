@@ -1,0 +1,27 @@
+[
+  {
+    "question": "Какой класс в Interlude обычно ассоциируется с кубиками и масс-рутами?",
+    "answers": ["Treasure Hunter", "Warlock", "Necromancer", "Bishop"],
+    "correctAnswerIndex": 1
+  },
+  {
+    "question": "Какой рейдовый босс чаще всего первым приходит в голову при словах 'муравейник'?",
+    "answers": ["Core", "Orfen", "Queen Ant", "Baium"],
+    "correctAnswerIndex": 2
+  },
+  {
+    "question": "Какой бафф в Interlude ускоряет атаку ближнего боя?",
+    "answers": ["Haste", "Acumen", "Empower", "Wild Magic"],
+    "correctAnswerIndex": 0
+  },
+  {
+    "question": "Какая профессия делает персонажа карликом-добытчиком?",
+    "answers": ["Spoiler", "Gladiator", "Swordsinger", "Sorcerer"],
+    "correctAnswerIndex": 0
+  },
+  {
+    "question": "Какой город считается стартовым для тёмных эльфов?",
+    "answers": ["Dion", "Aden", "Gludio", "Dark Elven Village"],
+    "correctAnswerIndex": 3
+  }
+]
