@@ -30,9 +30,12 @@ Request:
 Response:
 ```json
 {
+  "ok": true,
+  "status": "prompt_sent",
   "requestId": "a127d115-72b0-4832-ac66-8be090448756",
   "serverName": "x25_old",
-  "characterName": "se1dhe"
+  "characterName": "se1dhe",
+  "message": null
 }
 ```
 
@@ -41,6 +44,20 @@ Game server должен:
 - определить аккаунт персонажа
 - сохранить pending request
 - показать игроку подтверждение в игре
+
+Если запрос создать нельзя, game server должен вернуть `ok: false` и понятный `message`:
+```json
+{
+  "ok": false,
+  "status": "not_found",
+  "requestId": null,
+  "serverName": "x25_old",
+  "characterName": "se1dhe",
+  "message": "Персонаж не найден"
+}
+```
+
+Бот принимает как camelCase, так и snake_case поля (`requestId`/`request_id`, `serverName`/`server_name`, `characterName`/`character_name`).
 
 ### POST `/api/{server}/account/link/confirm`
 
@@ -59,6 +76,7 @@ Request:
 Response:
 ```json
 {
+  "ok": true,
   "externalAccountId": "account_123",
   "serverName": "x25_old",
   "hwid": "HWID-ABC-123",
@@ -80,6 +98,47 @@ Game server должен:
 - вернуть account ID
 - вернуть текущий account HWID
 - вернуть список персонажей аккаунта с их `obj_Id`
+
+Если игрок ещё не подтвердил запрос в игровом окне, game server должен вернуть `ok: false`:
+```json
+{
+  "ok": false,
+  "requestId": "a127d115-72b0-4832-ac66-8be090448756",
+  "externalAccountId": null,
+  "hwid": null,
+  "linkedCharacters": [],
+  "telegramUserId": 1259547081,
+  "message": "Запрос не найден, истёк или ещё не подтверждён в игре"
+}
+```
+
+Бот принимает как camelCase, так и snake_case поля (`externalAccountId`/`external_account_id`, `linkedCharacters`/`linked_characters`, `externalCharacterId`/`external_character_id`).
+
+### POST `/api/internal/link/confirmed`
+
+Это endpoint на стороне Telegram bot, который вызывает game server после того, как игрок нажал YES в игровом confirm.
+
+Назначение:
+- Уведомить бота, что request подтверждён в игре.
+- Бот после этого сам вызовет `/api/{server}/account/link/confirm`, заберёт account/characters и сохранит привязку.
+
+Request:
+```json
+{
+  "telegramUserId": 1259547081,
+  "requestId": "a127d115-72b0-4832-ac66-8be090448756",
+  "serverName": "x25_old"
+}
+```
+
+Response:
+- `202 Accepted`, если уведомление принято и привязка сохранена.
+- `400 Bad Request`, если payload неполный или game server ещё не отдаёт подтверждённую привязку.
+
+Config на стороне game server:
+```properties
+TelegramBotLinkConfirmedEndpoint = /api/internal/link/confirmed
+```
 
 ## 2. Отвязка HWID
 
