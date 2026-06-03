@@ -45,6 +45,7 @@ forceplay:
     shop-url: ${BOT_SHOP_URL:https://forceplay.org/ru/panel/donations}
     updater-url: ${BOT_UPDATER_URL:https://forceplay.org/ForcePlay.zip}
     support-url: ${BOT_SUPPORT_URL:https://forceplay.org/panel/support}
+    tarot-webapp-url: ${TAROT_WEBAPP_URL:http://localhost:8081/tarot/}
     admin-ids: ${ADMIN_IDS:}
     referral-enabled: ${REFERRAL_ENABLED:true}
     referral-item-id: ${REFERRAL_ITEM_ID:57}

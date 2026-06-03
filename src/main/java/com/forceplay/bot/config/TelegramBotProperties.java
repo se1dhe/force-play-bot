@@ -33,6 +33,8 @@ public class TelegramBotProperties {
 
     private String supportUrl = "https://forceplay.org/panel/support";
 
+    private String tarotWebappUrl = "http://localhost:8081/tarot/";
+
     private List<Long> adminIds = List.of();
 
     private long hwidTtlSeconds = 120;

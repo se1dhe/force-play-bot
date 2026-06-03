@@ -8,6 +8,7 @@
 - Бот выбирает `baseUrl` и path-шаблоны из корневого [servers.yml](/Users/se1dhe/projects/force-play-bot/servers.yml).
 - Все даты и времена лучше возвращать уже в человекочитаемом виде либо в ISO-8601.
 - Все ошибки game server должны возвращать понятный `message`, который можно безопасно показать пользователю в Telegram.
+- Telegram Mini App "Карты таро" обслуживается самим bot backend по `/tarot/`.
 
 ## 1. Привязка аккаунта
 
@@ -139,6 +140,141 @@ Config на стороне game server:
 ```properties
 TelegramBotLinkConfirmedEndpoint = /api/internal/link/confirmed
 ```
+
+## Tarot of Destiny Mini App
+
+Mini App открывается Telegram WebApp-кнопкой `Карты таро` в главном меню бота.
+Production URL задается через `TAROT_WEBAPP_URL`; для Telegram это должен быть публичный HTTPS URL.
+
+### Авторизация Mini App
+
+Все приватные endpoint'ы `/api/tarot/**` принимают заголовок:
+
+```http
+X-Telegram-Init-Data: <window.Telegram.WebApp.initData>
+```
+
+Бот валидирует Telegram initData по HMAC-SHA256 с токеном бота и не принимает `telegramId` из тела запроса.
+
+### GET `/api/tarot/state`
+
+Возвращает доступные гадания, pity-progress, прогресс коллекции, активный незавершенный расклад, ассеты и пакеты Telegram Stars.
+
+### POST `/api/tarot/draws/start`
+
+Создает расклад из 3 карт. Если у игрока уже есть открытый расклад, возвращает его повторно для защиты от двойного клика.
+
+Правила списания:
+- обычный игрок: 1 бесплатное гадание в сутки
+- VIP в Tarot profile: 2 бесплатных гадания в сутки
+- затем списываются купленные гадания
+
+### POST `/api/tarot/draws/{drawId}/reveal`
+
+Request:
+```json
+{
+  "cardIndex": 0
+}
+```
+
+Переворачивает выбранную карту один раз, сохраняет награду, аркан, историю, коллекцию и обновляет pity-counter.
+Если выпала `ROYAL`, бот создает запись в глобальной ленте и отправляет объявление пользователям.
+
+### POST `/api/tarot/draws/{drawId}/claim`
+
+Помечает выбранную награду как полученную. Выдача предметов на game server пока остается отдельной интеграционной точкой.
+
+### GET `/api/tarot/history?rarity=COMMON|RARE|ROYAL`
+
+Возвращает последние 50 завершенных гаданий пользователя. Параметр `rarity` необязателен.
+
+### GET `/api/tarot/feed`
+
+Возвращает последние 50 открытий глобальной "Ленты Судьбы".
+
+### POST `/api/tarot/payments/invoice`
+
+Request:
+```json
+{
+  "packageCode": "draw_5"
+}
+```
+
+Создает Telegram Stars invoice link. Пакеты и цены хранятся в `tarot_purchase_packages`, не в коде.
+
+### GET `/api/admin/tarot/stats`
+
+Админский endpoint по тому же Telegram initData. Возвращает:
+- всего завершенных гаданий
+- количество COMMON/RARE/ROYAL наград
+- оплаченные покупки
+- доход в Telegram Stars
+
+### Admin CRUD `/api/admin/tarot/**`
+
+Все ручки защищены `X-Telegram-Init-Data` и проверкой `ADMIN_IDS`.
+
+- `GET /api/admin/tarot/seasons`
+- `POST /api/admin/tarot/seasons`
+- `PUT /api/admin/tarot/seasons/{id}`
+- `GET /api/admin/tarot/decks`
+- `POST /api/admin/tarot/decks`
+- `PUT /api/admin/tarot/decks/{id}`
+- `GET /api/admin/tarot/arcana`
+- `POST /api/admin/tarot/arcana`
+- `PUT /api/admin/tarot/arcana/{id}`
+- `GET /api/admin/tarot/rewards`
+- `POST /api/admin/tarot/rewards`
+- `PUT /api/admin/tarot/rewards/{id}`
+- `GET /api/admin/tarot/settings`
+- `PUT /api/admin/tarot/settings/{key}`
+- `GET /api/admin/tarot/packages`
+- `PUT /api/admin/tarot/packages/{code}`
+
+Эти endpoint'ы закрывают админ-раздел Tarot: сезоны, колоды, арканы, награды, веса выпадения, включение/выключение наград, цены Stars и статистика.
+
+### Telegram Stars update flow
+
+Бот обрабатывает:
+- `PreCheckoutQuery` для payload `tarot:*`
+- `SuccessfulPayment`, после чего добавляет купленные гадания в `tarot_user_profiles.purchased_draws`
+
+### Настройки ENV
+
+```properties
+TAROT_WEBAPP_URL=https://your-domain.example/tarot/
+```
+
+Остальные игровые настройки Tarot хранятся в БД:
+- `tarot_settings.pity_threshold`
+- `tarot_settings.free_draws_regular`
+- `tarot_settings.free_draws_vip`
+- `tarot_settings.background`
+- `tarot_settings.card_back_1`
+- `tarot_settings.card_back_2`
+- `tarot_purchase_packages.draws`
+- `tarot_purchase_packages.stars_price`
+- `tarot_purchase_packages.enabled`
+
+### Схема БД Tarot
+
+Миграция: `src/main/resources/db/migration/V10__add_tarot_of_destiny.sql`.
+
+Основные таблицы:
+- `tarot_seasons`: сезоны
+- `tarot_decks`: колоды сезона
+- `tarot_arcana`: арканы сезона
+- `tarot_rewards`: награды и веса выпадения
+- `tarot_user_profiles`: лимиты, купленные гадания, VIP, pity-counter
+- `tarot_draws`: расклады пользователя
+- `tarot_draw_cards`: 3 карты конкретного расклада
+- `user_tarot_arcana`: коллекция открытых арканов
+- `tarot_feed_entries`: глобальная лента
+- `tarot_purchases`: Telegram Stars покупки
+- `tarot_settings`: конфиг лимитов и ассетов
+- `tarot_purchase_packages`: пакеты покупки гаданий
 
 ## 2. Отвязка HWID
 

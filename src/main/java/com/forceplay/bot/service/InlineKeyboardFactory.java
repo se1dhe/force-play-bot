@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
+import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +44,9 @@ public class InlineKeyboardFactory {
         rows.add(new InlineKeyboardRow(
                 button(text(language, "button.referrals", "👥 Пригласить друга"), "menu|referrals", STYLE_PRIMARY),
                 linkButton(text(language, "button.shop", "🛒 Магазин"), botPropertiesAccessor.shopUrl(), STYLE_PRIMARY)
+        ));
+        rows.add(new InlineKeyboardRow(
+                webAppButton(text(language, "button.tarot", "🔮 Карты таро"), botPropertiesAccessor.tarotWebappUrl(), STYLE_PRIMARY)
         ));
         rows.add(new InlineKeyboardRow(
                 linkButton(text(language, "button.discord", "💬 Discord"), botPropertiesAccessor.discordUrl(), STYLE_PRIMARY),
@@ -397,6 +401,15 @@ public class InlineKeyboardFactory {
         InlineKeyboardButton button = InlineKeyboardButton.builder()
                 .text(text)
                 .url(url)
+                .build();
+        button.setStyle(style);
+        return button;
+    }
+
+    private InlineKeyboardButton webAppButton(String text, String url, String style) {
+        InlineKeyboardButton button = InlineKeyboardButton.builder()
+                .text(text)
+                .webApp(WebAppInfo.builder().url(url).build())
                 .build();
         button.setStyle(style);
         return button;

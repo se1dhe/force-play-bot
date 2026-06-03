@@ -57,4 +57,8 @@ public class TelegramBotPropertiesAccessor {
     public String supportUrl() {
         return properties.getSupportUrl();
     }
+
+    public String tarotWebappUrl() {
+        return properties.getTarotWebappUrl();
+    }
 }
