@@ -49,7 +49,7 @@ public class TelegramWebAppAuthService {
         if (userJson == null || userJson.isBlank()) {
             throw new ForcePlayException("Telegram не передал данные пользователя.");
         }
-        return parseUser(userJson);
+        return parseUser(URLDecoder.decode(userJson, StandardCharsets.UTF_8));
     }
 
     private void validateAge(String authDate) {

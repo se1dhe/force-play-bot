@@ -46,7 +46,7 @@ public class InlineKeyboardFactory {
                 linkButton(text(language, "button.shop", "🛒 Магазин"), botPropertiesAccessor.shopUrl(), STYLE_PRIMARY)
         ));
         rows.add(new InlineKeyboardRow(
-                webAppButton(text(language, "button.tarot", "🔮 Карты таро"), botPropertiesAccessor.tarotWebappUrl(), STYLE_PRIMARY)
+                webAppButton(text(language, "button.tarot", "⚔️ Колода Lineage 2"), botPropertiesAccessor.tarotWebappUrl(), STYLE_DANGER)
         ));
         rows.add(new InlineKeyboardRow(
                 linkButton(text(language, "button.discord", "💬 Discord"), botPropertiesAccessor.discordUrl(), STYLE_PRIMARY),

@@ -2,74 +2,171 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#101018">
-    <title>Карты таро</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+    <meta name="theme-color" content="#0a0807">
+    <title>Колода Lineage 2</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cinzel: ['Cinzel', 'serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        bg: '#0a0807',
+                        gold: {
+                            DEFAULT: '#dfb15b',
+                            dark: '#a87b32',
+                            light: '#ffe599'
+                        },
+                        panel: 'rgba(20, 16, 14, 0.65)',
+                        'panel-strong': 'rgba(15, 12, 10, 0.85)',
+                        muted: '#a3907c',
+                    },
+                    boxShadow: {
+                        glass: 'inset 0 0 10px rgba(255,255,255,0.05), 0 8px 32px rgba(0,0,0,0.5)',
+                        glow: '0 0 20px rgba(223, 177, 91, 0.4)',
+                        'glow-royal': '0 0 40px rgba(223, 177, 91, 0.8)',
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                    }
+                }
+            }
+        }
+    </script>
+    
     <link rel="stylesheet" href="/tarot/styles.css">
+    
+    <!-- Libraries -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body>
-<main class="tarot-shell" id="app">
-    <section class="stage" id="stage">
-        <header class="topbar">
-            <div>
-                <p class="eyebrow">Астария</p>
-                <h1>Карты таро</h1>
-            </div>
-            <button class="icon-button" id="refreshButton" type="button" aria-label="Обновить">↻</button>
-        </header>
+<body class="bg-bg text-[#e6dfd5] font-outfit antialiased min-h-screen relative overflow-hidden select-none">
 
-        <section class="stats" aria-label="Статус гаданий">
-            <article>
-                <span>Гадания</span>
-                <strong id="drawsCount">0</strong>
+<!-- Background Overlay -->
+<div id="dynamicBg" class="fixed inset-0 z-[-1] bg-cover bg-top bg-no-repeat transition-all duration-1000" style="background-image: url('/tarot/assets/astaria_background.jpg');">
+    <div class="absolute inset-0 bg-gradient-to-b from-bg/60 via-bg/80 to-bg/95 backdrop-blur-[2px]"></div>
+</div>
+
+<!-- Preloader -->
+<div id="preloader" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-bg/95 backdrop-blur-md transition-opacity duration-700">
+    <div class="relative w-24 h-24 mb-6">
+        <div class="absolute inset-0 border-2 border-gold/20 rounded-full animate-ping"></div>
+        <div class="absolute inset-2 border-2 border-t-gold border-r-gold/50 border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+        <div class="absolute inset-0 flex items-center justify-center">
+            <i data-lucide="sparkles" class="text-gold w-8 h-8 animate-pulse"></i>
+        </div>
+    </div>
+    <h1 class="font-cinzel text-3xl text-gold font-bold tracking-widest animate-pulse">ELMOREADEN</h1>
+    <p class="text-muted text-sm mt-2 tracking-widest uppercase">Печати пробуждаются...</p>
+</div>
+
+<!-- Main App -->
+<main id="app" class="relative min-h-screen flex flex-col pb-[58px] opacity-0">
+    
+    <!-- Header / Stats -->
+    <header class="p-3 pt-safe safe-top z-20">
+        <section class="grid grid-cols-3 gap-2" aria-label="Статус раскладов">
+            <article class="bg-panel border border-white/5 rounded-lg p-2 text-center shadow-glass backdrop-blur-md relative overflow-hidden">
+                <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent"></div>
+                <span class="text-[9px] uppercase tracking-wider text-muted font-semibold">Расклады</span>
+                <strong id="drawsCount" class="block text-lg text-gold font-bold mt-0.5 font-cinzel leading-none">0</strong>
             </article>
-            <article>
-                <span>Король</span>
-                <strong id="pityCount">0/50</strong>
+            <article class="bg-panel border border-white/5 rounded-lg p-2 text-center shadow-glass backdrop-blur-md relative overflow-hidden">
+                <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent"></div>
+                <span class="text-[9px] uppercase tracking-wider text-muted font-semibold">Эпик</span>
+                <strong id="pityCount" class="block text-lg text-gold font-bold mt-0.5 font-cinzel leading-none">0/50</strong>
             </article>
-            <article>
-                <span>Арканы</span>
-                <strong id="collectionCount">0/22</strong>
+            <article class="bg-panel border border-white/5 rounded-lg p-2 text-center shadow-glass backdrop-blur-md relative overflow-hidden">
+                <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent"></div>
+                <span class="text-[9px] uppercase tracking-wider text-muted font-semibold">Реликвии</span>
+                <strong id="collectionCount" class="block text-lg text-gold font-bold mt-0.5 font-cinzel leading-none">0/22</strong>
             </article>
         </section>
+    </header>
 
-        <nav class="tabs" aria-label="Разделы Таро">
-            <button class="tab active" type="button" data-tab="draw">Гадание</button>
-            <button class="tab" type="button" data-tab="history">Моя история</button>
-            <button class="tab" type="button" data-tab="feed">Лента Судьбы</button>
-        </nav>
-
-        <section class="panel active" data-panel="draw">
-            <div class="table-scene" aria-live="polite">
-                <div class="cards" id="cards"></div>
-                <div class="result" id="result" hidden></div>
+    <!-- Panels -->
+    <div class="flex-1 relative">
+        
+        <!-- DRAW PANEL -->
+        <section class="panel-section absolute inset-0 flex flex-col p-3 overflow-y-auto no-scrollbar" data-panel="draw">
+            <div class="table-scene flex-1 flex flex-col justify-center items-center relative perspective-[1200px] min-h-[210px] pb-2">
+                <!-- Aura background for selected card -->
+                <div id="cardAura" class="absolute inset-0 pointer-events-none opacity-0 bg-radial-glow transition-opacity duration-1000 z-0"></div>
+                
+                <div class="cards w-full max-w-[300px] grid grid-cols-3 gap-2 items-end justify-center z-10" id="cards"></div>
+                
+                <div class="result w-full max-w-[340px] mt-3 p-3 rounded-xl bg-panel-strong border border-gold/40 shadow-glow-royal backdrop-blur-xl text-center hidden z-30" id="result"></div>
             </div>
-            <div class="actions">
-                <button class="primary-button" id="startButton" type="button">Открыть карты</button>
-                <button class="secondary-button" id="claimButton" type="button" hidden>Получить награду</button>
+            
+            <div class="mt-2 flex flex-col gap-2 z-20 shrink-0">
+                <button id="startButton" class="w-full py-2.5 rounded-xl bg-gradient-to-b from-gold to-gold-dark text-[#1f1406] font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(223,177,91,0.4)] border border-gold-light active:scale-95 transition-all">
+                    Открыть печать
+                </button>
+                <button id="claimButton" class="w-full py-2.5 rounded-xl bg-gradient-to-b from-gold to-gold-dark text-[#1f1406] font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(223,177,91,0.35)] border border-gold-light active:scale-95 transition-all hidden">
+                    Забрать и открыть следующий
+                </button>
             </div>
-            <div class="packages" id="packages"></div>
+            
+            <div class="packages grid grid-cols-3 gap-1.5 mt-2 z-20 shrink-0" id="packages"></div>
         </section>
 
-        <section class="panel" data-panel="history">
-            <div class="filters" id="historyFilters">
-                <button class="chip active" type="button" data-rarity="">Все</button>
-                <button class="chip" type="button" data-rarity="COMMON">Обычные</button>
-                <button class="chip" type="button" data-rarity="RARE">Редкие</button>
-                <button class="chip" type="button" data-rarity="ROYAL">Королевские</button>
+        <!-- HISTORY PANEL -->
+        <section class="panel-section absolute inset-0 flex flex-col overflow-y-auto no-scrollbar hidden opacity-0 translate-x-[20px]" data-panel="history">
+            <div class="sticky top-0 z-20 bg-bg/90 backdrop-blur-md px-3 pt-3 pb-2 border-b border-white/5">
+                <div class="flex gap-2 overflow-x-auto no-scrollbar" id="historyFilters">
+                    <button class="chip active px-3 py-1.5 rounded-full bg-panel border border-white/10 text-[11px] whitespace-nowrap text-muted transition-all" data-rarity="">Все</button>
+                    <button class="chip px-3 py-1.5 rounded-full bg-panel border border-white/10 text-[11px] whitespace-nowrap text-muted transition-all" data-rarity="COMMON">Обычные</button>
+                    <button class="chip px-3 py-1.5 rounded-full bg-panel border border-white/10 text-[11px] whitespace-nowrap text-muted transition-all" data-rarity="RARE">Редкие</button>
+                    <button class="chip px-3 py-1.5 rounded-full bg-panel border border-white/10 text-[11px] whitespace-nowrap text-muted transition-all" data-rarity="ROYAL">Эпические</button>
+                </div>
             </div>
-            <div class="list" id="historyList"></div>
+            <div class="list flex flex-col gap-2 p-3 pt-2" id="historyList"></div>
         </section>
 
-        <section class="panel" data-panel="feed">
-            <div class="list" id="feedList"></div>
+        <!-- FEED PANEL -->
+        <section class="panel-section absolute inset-0 flex flex-col p-3 overflow-y-auto no-scrollbar hidden opacity-0 translate-x-[20px]" data-panel="feed">
+            <div class="list flex flex-col gap-2" id="feedList"></div>
         </section>
-    </section>
+        
+    </div>
 
-    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-    <div class="confetti" id="confetti" aria-hidden="true"></div>
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 inset-x-0 h-[52px] bg-bg/85 backdrop-blur-xl border-t border-white/5 flex items-center justify-around px-2 z-40">
+        <button class="nav-btn active flex flex-col items-center gap-0.5 w-16 text-gold transition-colors" data-tab="draw">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+            <span class="text-[9px] font-semibold tracking-wider">Печать</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center gap-0.5 w-16 text-muted hover:text-white transition-colors" data-tab="history">
+            <i data-lucide="book-open" class="w-5 h-5"></i>
+            <span class="text-[9px] font-semibold tracking-wider">Трофеи</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center gap-0.5 w-16 text-muted hover:text-white transition-colors" data-tab="feed">
+            <i data-lucide="globe" class="w-5 h-5"></i>
+            <span class="text-[9px] font-semibold tracking-wider">Лента</span>
+        </button>
+    </nav>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-8 left-1/2 -translate-x-1/2 z-50 bg-panel-strong border border-gold/50 text-gold px-6 py-3 rounded-full shadow-glow font-semibold backdrop-blur-xl transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none"></div>
+    
+    <!-- Confetti Canvas -->
+    <div id="confetti" class="fixed inset-0 pointer-events-none z-50"></div>
 </main>
-<script src="/tarot/app.js" defer></script>
+
+<script src="/tarot/app.js?v=3" defer></script>
 </body>
 </html>

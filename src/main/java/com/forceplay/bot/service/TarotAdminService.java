@@ -79,7 +79,7 @@ public class TarotAdminService {
     public TarotArcana saveArcana(String initData, Long id, TarotAdminDto.ArcanaRequest request) {
         requireAdmin(initData);
         TarotArcana arcana = id == null ? new TarotArcana() : arcanaRepository.findById(id)
-                .orElseThrow(() -> new ForcePlayException("Аркан не найден."));
+                .orElseThrow(() -> new ForcePlayException("Реликвия не найдена."));
         arcana.setName(required(request.name(), "Название аркана обязательно."));
         arcana.setImage(request.image());
         arcana.setDescription(request.description());

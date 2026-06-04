@@ -43,7 +43,7 @@ public class TarotPaymentUpdateHandler implements UpdateHandler {
             telegramClient.execute(AnswerPreCheckoutQuery.builder()
                     .preCheckoutQueryId(queryId)
                     .ok(accepted)
-                    .errorMessage(accepted ? null : "Покупка Таро не найдена или уже оплачена.")
+                    .errorMessage(accepted ? null : "Покупка раскладов не найдена или уже оплачена.")
                     .build());
         } catch (TelegramApiException exception) {
             log.warn("Failed to answer tarot pre-checkout query {}", queryId, exception);

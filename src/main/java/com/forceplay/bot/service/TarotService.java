@@ -83,7 +83,7 @@ public class TarotService {
     public TarotDto.StateResponse state(String initData) {
         TelegramWebAppUser telegramUser = authService.authenticate(initData);
         TarotUserProfile profile = profileRepository.findByUserTelegramId(telegramUser.id())
-                .orElseGet(() -> buildTransientProfile(userService.getOrCreateUser(telegramUser.id(), telegramUser.languageCode())));
+                .orElseGet(() -> buildTransientProfile(userService.getOrCreateUser(telegramUser.id(), telegramUser.languageCode(), telegramUser.username(), telegramUser.firstName(), telegramUser.lastName())));
         TarotSeason season = activeSeason();
         return new TarotDto.StateResponse(
                 profileDto(profile, season),
@@ -103,7 +103,7 @@ public class TarotService {
             return drawDtoHidden(existing.get());
         }
 
-        User user = userService.getOrCreateUser(telegramUser.id(), telegramUser.languageCode());
+        User user = userService.getOrCreateUser(telegramUser.id(), telegramUser.languageCode(), telegramUser.username(), telegramUser.firstName(), telegramUser.lastName());
         TarotUserProfile profile = lockedProfile(user);
         resetFreeDrawsIfNeeded(profile);
         consumeDraw(profile);
@@ -239,8 +239,8 @@ public class TarotService {
         TarotDto.PurchasePackageDto pack = purchasePackages().stream()
                 .filter(item -> item.enabled() && item.code().equals(packageCode))
                 .findFirst()
-                .orElseThrow(() -> new ForcePlayException("Пакет гаданий не найден."));
-        User user = userService.getOrCreateUser(telegramUser.id(), telegramUser.languageCode());
+                .orElseThrow(() -> new ForcePlayException("Пакет раскладов не найден."));
+        User user = userService.getOrCreateUser(telegramUser.id(), telegramUser.languageCode(), telegramUser.username(), telegramUser.firstName(), telegramUser.lastName());
         TarotPurchase purchase = purchaseRepository.save(TarotPurchase.builder()
                 .user(user)
                 .packageCode(pack.code())
@@ -253,12 +253,12 @@ public class TarotService {
         purchase.setPayload("tarot:" + purchase.getId() + ":" + pack.code());
         try {
             String invoiceUrl = telegramClient.execute(CreateInvoiceLink.builder()
-                    .title("Карты таро")
-                    .description(pack.draws() + " дополнительных гаданий")
+                    .title("Колода Lineage 2")
+                    .description(pack.draws() + " дополнительных раскладов Семи Печатей")
                     .payload(purchase.getPayload())
                     .providerToken("")
                     .currency("XTR")
-                    .prices(List.of(new LabeledPrice(pack.draws() + " гаданий", pack.starsPrice())))
+                    .prices(List.of(new LabeledPrice(pack.draws() + " раскладов", pack.starsPrice())))
                     .build());
             return new TarotDto.InvoiceResponse(invoiceUrl);
         } catch (TelegramApiException exception) {
@@ -273,7 +273,7 @@ public class TarotService {
             return;
         }
         TarotPurchase purchase = purchaseRepository.findByPayload(payload)
-                .orElseThrow(() -> new ForcePlayException("Покупка Таро не найдена."));
+                .orElseThrow(() -> new ForcePlayException("Покупка раскладов не найдена."));
         if (purchase.getStatus() == TarotPurchaseStatus.PAID) {
             return;
         }
@@ -351,7 +351,7 @@ public class TarotService {
             profile.setPurchasedDraws(profile.getPurchasedDraws() - 1);
             return;
         }
-        throw new ForcePlayException("Нет доступных гаданий.");
+        throw new ForcePlayException("Нет доступных раскладов.");
     }
 
     private void resetFreeDrawsIfNeeded(TarotUserProfile profile) {
@@ -369,12 +369,12 @@ public class TarotService {
 
     private TarotSeason activeSeason() {
         return seasonRepository.findFirstByActiveTrueOrderByStartDateDesc()
-                .orElseThrow(() -> new ForcePlayException("Активный сезон Таро не настроен."));
+                .orElseThrow(() -> new ForcePlayException("Активный сезон Lineage 2 не настроен."));
     }
 
     private TarotDeck activeDeck(TarotSeason season) {
         return deckRepository.findFirstBySeasonAndActiveTrueOrderByIdAsc(season)
-                .orElseThrow(() -> new ForcePlayException("Активная колода Таро не настроена."));
+                .orElseThrow(() -> new ForcePlayException("Активная колода Lineage 2 не настроена."));
     }
 
     private TarotReward weightedReward(TarotSeason season, List<TarotRarity> rarities) {
@@ -382,7 +382,7 @@ public class TarotService {
                 .filter(reward -> reward.getWeight() > 0)
                 .toList();
         if (rewards.isEmpty()) {
-            throw new ForcePlayException("Пул наград Таро пуст.");
+            throw new ForcePlayException("Пул трофеев Lineage 2 пуст.");
         }
         int total = rewards.stream().mapToInt(TarotReward::getWeight).sum();
         int roll = ThreadLocalRandom.current().nextInt(total);
@@ -398,7 +398,7 @@ public class TarotService {
     private TarotArcana randomArcana(TarotSeason season) {
         List<TarotArcana> arcana = arcanaRepository.findAllBySeasonOrderByIdAsc(season);
         if (arcana.isEmpty()) {
-            throw new ForcePlayException("Арканы Таро не настроены.");
+            throw new ForcePlayException("Реликвии Lineage 2 не настроены.");
         }
         return arcana.get(ThreadLocalRandom.current().nextInt(arcana.size()));
     }
@@ -431,9 +431,9 @@ public class TarotService {
 
     private TarotDto.DrawDto drawDtoRevealed(TarotDraw draw) {
         List<TarotDto.DrawCardDto> cards = drawCardRepository.findAllByDrawIdOrderByCardIndexAsc(draw.getId()).stream()
-                .map(card -> new TarotDto.DrawCardDto(card.getCardIndex(), card.isSelected(), card.isSelected(),
-                        card.isSelected() ? rewardDto(card.getReward()) : null,
-                        card.isSelected() ? arcanaDto(card.getArcana()) : null))
+                .map(card -> new TarotDto.DrawCardDto(card.getCardIndex(), true, card.isSelected(),
+                        rewardDto(card.getReward()),
+                        arcanaDto(card.getArcana())))
                 .toList();
         return new TarotDto.DrawDto(draw.getId(), draw.getStatus().name(), draw.isGuaranteedRoyal(), cards);
     }
@@ -488,23 +488,32 @@ public class TarotService {
     }
 
     private String username(User user) {
+        if (user.getUsername() != null && !user.getUsername().isBlank()) {
+            return "@" + user.getUsername();
+        }
+        if (user.getFirstName() != null && !user.getFirstName().isBlank()) {
+            return user.getFirstName();
+        }
+        if (user.getLastName() != null && !user.getLastName().isBlank()) {
+            return user.getLastName();
+        }
         return "ID " + user.getTelegramId();
     }
 
     private void announceRoyal(TarotFeedEntry entry, String username) {
         String text = """
-                👑 Судьба улыбнулась герою!
+                👑 Эльмораден услышал героя!
 
                 %s
 
-                открыл Карту Короля Судьбы
+                открыл эпическую реликвию Lineage 2
 
-                Награда:
+                Трофей:
                 %s
                 """.formatted(username, entry.getReward().getName());
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(List.of(new InlineKeyboardRow(
                 InlineKeyboardButton.builder()
-                        .text("🔮 Открыть Таро")
+                        .text("⚔️ Открыть Колоду")
                         .webApp(WebAppInfo.builder().url(botPropertiesAccessor.tarotWebappUrl()).build())
                         .build()
         )));

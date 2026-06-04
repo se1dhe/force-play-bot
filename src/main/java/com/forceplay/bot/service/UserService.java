@@ -7,6 +7,8 @@ import java.util.List;
 public interface UserService {
     User getOrCreateUser(Long telegramId, String languageCode);
 
+    User getOrCreateUser(Long telegramId, String languageCode, String username, String firstName, String lastName);
+
     java.util.Optional<User> findByTelegramId(Long telegramId);
 
     String resolveLanguage(Long telegramId, String fallbackLanguageCode);

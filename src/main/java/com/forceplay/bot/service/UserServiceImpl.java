@@ -20,12 +20,37 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User getOrCreateUser(Long telegramId, String languageCode) {
-        return userRepository.findByTelegramId(telegramId)
+        return getOrCreateUser(telegramId, languageCode, null, null, null);
+    }
+
+    @Override
+    @Transactional
+    public User getOrCreateUser(Long telegramId, String languageCode, String username, String firstName, String lastName) {
+        User user = userRepository.findByTelegramId(telegramId)
                 .orElseGet(() -> userRepository.save(User.builder()
                         .telegramId(telegramId)
                         .language(messageResolver.normalizeLanguage(languageCode))
                         .createdAt(OffsetDateTime.now())
                         .build()));
+
+        boolean updated = false;
+        if (username != null && !username.equals(user.getUsername())) {
+            user.setUsername(username);
+            updated = true;
+        }
+        if (firstName != null && !firstName.equals(user.getFirstName())) {
+            user.setFirstName(firstName);
+            updated = true;
+        }
+        if (lastName != null && !lastName.equals(user.getLastName())) {
+            user.setLastName(lastName);
+            updated = true;
+        }
+
+        if (updated) {
+            return userRepository.save(user);
+        }
+        return user;
     }
 
     @Override
